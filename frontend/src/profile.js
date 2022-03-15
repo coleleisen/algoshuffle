@@ -214,7 +214,8 @@ const shuffleNfts = async () =>{
   }
   setOpen2(false)
   let obj ={
-    address : account
+    address : account,
+    selectedForShuffle : selectedForShuffle
   }
   let params = await algodClient.getTransactionParams().do();
   let wallet = await Axios.post("http://localhost:80/findwallet", obj)
@@ -225,11 +226,6 @@ const shuffleNfts = async () =>{
   console.log(requiredAmount);
   if(accountInfo.amount - nonSpendable < requiredAmount){
     let amountOwed = requiredAmount - (accountInfo.amount - nonSpendable)
-     // Construct the transaction
-     
-     // comment out the next two lines to use suggested fee
-     //params.fee = algosdk.ALGORAND_MIN_TX_FEE; 
-     //params.flatFee = true;
 
      const receiver = wallet.data.storeAddress;
      const enc = new TextEncoder();

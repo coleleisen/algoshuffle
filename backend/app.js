@@ -7,6 +7,7 @@ const saveWalletRoutes = require('./routes/savewallet');
 const findWalletRoutes = require('./routes/findwallet');
 const saveInstantShuffleRoutes = require('./routes/saveinstantshuffle');
 const findInstantShufflesRoutes = require('./routes/findinstantshuffles');
+const instantShuffleTransactionRoutes = require('./routes/instantshuffletransaction');
 let cors = require('cors')
 app.use(cors())
 require('dotenv').config();
@@ -47,6 +48,7 @@ app.use('/savewallet', saveWalletRoutes)
 app.use('/findwallet', findWalletRoutes)
 app.use('/saveinstantshuffle', saveInstantShuffleRoutes)
 app.use('/findinstantshuffles', findInstantShufflesRoutes)
+app.use('/instantshuffletransaction', instantShuffleTransactionRoutes)
 
 // Error request, 
 app.use((req, res, next) => {

@@ -18,6 +18,8 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
     let block =  new BlockchainPull()
     let account = localStorage.getItem("accountid")
     const algodClient = new algosdk.Algodv2(token, testServer, port);
+
+
     
     useEffect(() => {
         Axios.get("http://localhost:80/findinstantshuffles")
@@ -43,9 +45,20 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
     const enterShuffle = async (shuffle) =>{
 
         let accountIndex = await block.algoGetAccount(shuffle.storeAddress)
+        let params = await algodClient.getTransactionParams().do();
         let storeWallet = accountIndex.data.account
         let storeAssets = storeWallet.assets.filter(asset => asset.amount > 0)
         console.log(storeAssets)
+
+        let tranObj={
+            address : account,
+            storeAssets : storeAssets,
+            shuffle : shuffle,
+            params : params
+        }
+        let res = await Axios.post("http://localhost:80/instantshuffletransaction", tranObj);
+        let tranResponse = res.data
+        /*
         let params = await algodClient.getTransactionParams().do();
         let sender = account;
         let recipient = account;
@@ -105,11 +118,13 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
           }
         let wallet = await Axios.post("http://localhost:80/findwallet", obj)
         
-        let txnArrInBytes = []
+       
         //find index of randomly selected asset
         let selectedIndex = txnarr.findIndex(tranny => tranny.assetIndex === randomElement['asset-id']) + 2
         let txgroup = algosdk.assignGroupID(submitTxnArr);
-        let group = submitTxnArr[0].group
+        */
+       
+        /*
         for(let transaction of submitTxnArr){
             let buff = new Buffer.from(transaction.note, 'base64');
             let transferNote = buff.toString('ascii');
@@ -124,15 +139,25 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
             } 
              txnArrInBytes.push(transaction.toByte());
         }
-        const signedTxn = await myAlgoConnect.signTransaction(txnArrInBytes);
+        */
+       console.log(tranResponse.signArray)
+       let arr = []
+       for(let tran of tranResponse.signArray){
+           console.log(tran)
+            let tranny = new algosdk.Transaction(tran)
+            console.log("oye")
+            arr.push(tranny.toBytes())
+       }
+       console.log("here")
+       const signedTxn = await myAlgoConnect.signTransaction(arr);
     
         let signedTxns = []
+        let selectedIndex = tranResponse.selectedIndex
         signedTxns.push(signedTxn[0].blob);
         signedTxns.push(signedTxn[1].blob);
-        signedTxns.push(signedTxn[selectedIndex].blob);
-        let privateSig = new Uint8Array(Buffer.from(wallet.data.storePK,'base64'));
-        let rawSignedTxn = xtxn.signTxn(privateSig);
-        signedTxns.push(rawSignedTxn);
+        signedTxns.push(signedTxn[selectedIndex+2].blob);
+        
+        signedTxns.push(tranResponse.rawSignedTxn);
         let tx = (await algodClient.sendRawTransaction(signedTxns).do());
         let confirmedTxn = await algosdk.waitForConfirmation(algodClient, tx.txId, 4);
         //make sure waitrounds is good
