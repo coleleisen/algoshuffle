@@ -24,7 +24,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import Avatar from '@mui/material/Avatar';
 import TextField from '@mui/material/TextField';
 import Input from '@mui/material/Input';
-import { Tooltip, Grid } from '@mui/material';
+import { Tooltip, Grid, CircularProgress } from '@mui/material';
 import BlockchainPull from './services/blockchainpull';
 import LazyImage from './lazyimage';
 
@@ -63,6 +63,7 @@ const [needStore, setNeedStore] = React.useState(false);
 const [changeShuffleAvatar, setChangeShuffleAvatar] = React.useState(false);
 const [optOutButton, setOptOutButton] = React.useState(false);
 const [shuffleInProgress, setShuffleInProgress] = React.useState(true);
+const [shuffleLoading, setShuffleLoading] = React.useState(false);
 const [ownedNfts, setOwnedNfts] = React.useState([]);
 const [loopDone, setLoopDone] = React.useState([]);
 const [createdNfts, setCreatedNfts] = React.useState([]);
@@ -316,6 +317,7 @@ const shuffleNfts = async () =>{
     return
   }
   setOpen2(false)
+  setShuffleLoading(true)
   let obj ={
     address : account,
     selectedForShuffle : selectedForShuffle,
@@ -374,8 +376,9 @@ const shuffleNfts = async () =>{
         amount,  note, asset.index, params);
         txnArr.push(xtxn.toByte())
     }
+    setShuffleLoading(false)
     const signedTxn2 = await myAlgoConnect.signTransaction(txnArr);
-
+    setShuffleLoading(true)
     for(let tran of signedTxn2) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
     await waitForConfirmation(algodClient, response.txId, 4);
@@ -391,6 +394,7 @@ const shuffleNfts = async () =>{
       let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
       
       setShuffleInProgress(true);
+      setShuffleLoading(false)
     }
 
 
@@ -423,8 +427,9 @@ const shuffleNfts = async () =>{
         amount,  note, asset.index, params);
         txnArr.push(xtxn.toByte())
     }
+    setShuffleLoading(false)
     const signedTxn = await myAlgoConnect.signTransaction(txnArr);
-
+    setShuffleLoading(true)
     for(let tran of signedTxn) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
     await waitForConfirmation(algodClient, response.txId, 4);
@@ -440,6 +445,7 @@ const shuffleNfts = async () =>{
       let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
       console.log(shuffle)
       setShuffleInProgress(true);
+      setShuffleLoading(false)
     }
     
   }
@@ -834,7 +840,7 @@ const getProfileChain = () =>{
     <div></div>
     }
     <br></br>
-    {account === params.profileid ? <div>{!shuffleInProgress ? <Button onClick={selectShuffle}>Start Shuffle</Button> : <Button onClick={endShuffle}>End Shuffle</Button>}</div> : <div></div>}
+    {account === params.profileid ? <div>{shuffleLoading ? <CircularProgress /> : <div>{!shuffleInProgress ? <Button onClick={selectShuffle}>Start Shuffle</Button> : <Button onClick={endShuffle}>End Shuffle</Button>}</div>}</div> : <div></div>}
     <h3>Gallery</h3>
     <br></br>
     <Box>
