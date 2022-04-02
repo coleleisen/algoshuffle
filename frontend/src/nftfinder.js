@@ -37,11 +37,11 @@ const NftFinder = ({accountChange, setAccountChange}) => {
         let creator = "LANKZYW5QDFPDB4RYI3BH7MMCAYKOZUAFIE4VNDSKKTY26YCCSSRFRTYAA";
         let account = localStorage.getItem("accountid")
         //let account = "HPIVYHDE45N6TMUV3RP3TMC2KLGCCCGV3SAR5M4CCP52ZAG6DF6GGKYG7E"
-        console.log(account)
+        
         if(account){
             block.algoGetAccount(account)
             .then(result => {
-                console.log(result.data.account.assets)
+                
                 setAssets(result.data.account.assets)
             })
             .catch(err => {
@@ -54,7 +54,7 @@ const NftFinder = ({accountChange, setAccountChange}) => {
         
         block.algoGetAssetsByCreator(creator)
         .then(result => {
-            console.log(result.data)
+            
             setNfts(result.data.assets)
             setFullNfts(result.data.assets)
         })
@@ -147,7 +147,7 @@ const NftFinder = ({accountChange, setAccountChange}) => {
         if(assets.length > 0 && (cachedate !== today || !iscached) && !loopRunning){
             let i = 0;
             let j = 0;
-            console.log("starting loop")
+            
             localStorage.setObj("ownedNfts", [])
             setOwnedNfts([])
             setLoadingNfts(true)
@@ -161,7 +161,7 @@ const NftFinder = ({accountChange, setAccountChange}) => {
       useEffect(()=>{
           
         if(loopDone){
-            console.log("loop done")
+            
             setLoopRunning(false)
             setLoadingNfts(false)
             let owned = localStorage.getObj("ownedNfts")
@@ -197,8 +197,7 @@ const NftFinder = ({accountChange, setAccountChange}) => {
 
 
     useEffect(()=>{
-        console.log("account change")
-        console.log(accountChange)
+        
         if(accountChange==="true"){ 
             let arr = JSON.parse(JSON.stringify(assets))
             if(arr.length < 1){
@@ -224,7 +223,7 @@ const NftFinder = ({accountChange, setAccountChange}) => {
      
 
     const gotoAsset = () =>{
-        console.log("oete")
+        
       }
     
  

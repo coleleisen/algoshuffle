@@ -202,7 +202,7 @@ const endShuffle = () =>{
   }
   Axios.post(`${backend}/instantshuffle/end`, body) 
   .then(res => {
-      console.log(res)
+      
       if(res.data.message === "Deleted shuffle"){
         setShuffleInProgress(false)
       }
@@ -241,7 +241,7 @@ const generateStore = async ()=>{
   } 
   Axios.post(`${backend}/savewallet`, body) 
   .then(wallet => {
-    console.log(wallet)
+   
     localStorage.setItem('apiKey', wallet.data.apiKey)
     setApiKey(wallet.data.apiKey)
     setNeedStore(false)
@@ -274,14 +274,14 @@ const validateApiKey = async () =>{
     let rawSignedTxnB64 = Buffer.from(signedTxn.blob).toString("base64");
     signedTxn.blob = rawSignedTxnB64
     let unsignedb64 = Buffer.from(trans).toString("base64");
-    console.log(unsignedb64)
+   
     let obj={
       address : account,
       txn : rawSignedTxnB64,
       unsignedTxn : unsignedb64
     }
     let res = await Axios.post(`${backend}/getapikey`, obj) 
-    console.log(res.data)
+    
     if(res.data.apiKey){
       localStorage.setItem('apiKey', res.data.apiKey)
       setApiKey(res.data.apiKey)
@@ -290,7 +290,7 @@ const validateApiKey = async () =>{
 }
 
 const selectShuffleNft = (nft)=>{
-    console.log(nft)
+    
     if(selectedForShuffle.length === 0 || changeShuffleAvatar){
       setShuffleImage(nft.params.url)
       setChangeShuffleAvatar(false)
@@ -342,10 +342,10 @@ const shuffleNfts = async () =>{
          node: note, 
          suggestedParams: params
      });
-     console.log(txn)
+   
      const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
      const response = await algodClient.sendRawTransaction(signedTxn.blob).do();
-     console.log(response)
+     
      await waitForConfirmation(algodClient, response.txId, 4);
 
     sender = wallet.data.storeAddress;
@@ -379,7 +379,7 @@ const shuffleNfts = async () =>{
     for(let tran of signedTxn2) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
     await waitForConfirmation(algodClient, response.txId, 4);
-    console.log(response)
+    
     }
     let body={
       address : account,
@@ -389,7 +389,7 @@ const shuffleNfts = async () =>{
     }
     if(shufflePrice > 0){
       let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
-      console.log(shuffle)
+      
       setShuffleInProgress(true);
     }
 
@@ -428,7 +428,7 @@ const shuffleNfts = async () =>{
     for(let tran of signedTxn) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
     await waitForConfirmation(algodClient, response.txId, 4);
-    console.log(response)
+    
     }
     let body={
       address : account,
@@ -453,7 +453,7 @@ const getStorePhrase = () =>{
   }
   Axios.post(`${backend}/findwallet`, body) 
   .then(wallet => {
-    console.log(wallet.data)  
+   
     setPhrase(wallet.data.storePhrase)
     handleOpen3()
   })
@@ -490,7 +490,7 @@ const optOut = async ()=>{
 const saveProfile = () =>{
     setEditProfile(false)
     //account = "LANKZYW5QDFPDB4RYI3BH7MMCAYKOZUAFIE4VNDSKKTY26YCCSSRFRTYAA"
-    console.log(account)
+    
     var enc = new TextEncoder(); // always utf-8
     let obj = {
         profileName : profileName,
@@ -515,14 +515,13 @@ const saveProfile = () =>{
 async function signTransaction (p) {
     try {
         let param = await algodClient.getTransactionParams().do();
-        console.log(param)
-        console.log(p)
+        
         let txn = algosdk.makeAssetTransferTxnWithSuggestedParams(p.sender, p.recipient, p.closeRemainderTo, p.revocationTarget,
           p.amount, p.note, p.assetID, param);
-        console.log(txn)
+        
         const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
         const response = await algodClient.sendRawTransaction(signedTxn.blob).do();
-        console.log(response)
+        
         setTimeout(getProfileChain, 12000);
     } catch(err) {
       console.error(err); 
@@ -537,7 +536,7 @@ let body = {
 let store = ""
 Axios.post(`${backend}/findwallet`, body) 
 .then(wallet => {
-  console.log(wallet)
+ 
   if(wallet.data.message === "no wallet found with that address"){
     setNeedStore(true)
   }else if(wallet.data.storeAddress){
@@ -548,7 +547,7 @@ Axios.post(`${backend}/findwallet`, body)
       block.algoGetAccount(store)
         .then(res => {
           let storeWallet = res.data.account
-          console.log(storeWallet)
+          
           let storeHasAmount0 = storeWallet.assets.some(asset => asset.amount === 0)
           if(storeHasAmount0){
             setOptOutButton(true)
@@ -592,7 +591,7 @@ block.algoGetAssetsByCreator(params.profileid)
 .then(result => {
     setCreatedNfts(result.data.assets)
     let arr = result.data.assets
-    console.log(arr)
+    
     let found = false
     for(let i = 0; i < arr.length; i++){
         if(arr[i].params['unit-name'] == "PRF"){
@@ -680,7 +679,7 @@ const getProfileChain = () =>{
   if(profileIndex){
       block.algoGetAssetTransactionByAddress(profileIndex, params.profileid)
       .then(result => {
-        console.log(result.data)
+       
           let latest = result.data.transactions.length -1 
           let i = 0
           let tran = undefined
@@ -717,7 +716,7 @@ const getProfileChain = () =>{
       }, [loopDone]);
   
       useEffect(() => {
-          console.log(selectedForShuffle)
+          
         }, [selectedForShuffle]);
 
   

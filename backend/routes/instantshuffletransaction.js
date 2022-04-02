@@ -83,8 +83,6 @@ router.post('/', (req, res, next)=>{
                 }else{
                     royaltyAmount = royaltyFound.price
                 }
-                console.log(royaltyPrice)
-                let royaltyPrice = shuffle.price * royaltyPrice
                 let account = req.body.address
                 let params = req.body.params
                 let shuffle = req.body.shuffle
@@ -93,6 +91,7 @@ router.post('/', (req, res, next)=>{
                 let recipient = account;
                 let revocationTarget = undefined;
                 let closeRemainderTo = undefined;
+                let royaltyPrice = shuffle.price * royaltyAmount
                 const enc = new TextEncoder();
                 const note = enc.encode("Hello World");
                 let amount = 0;

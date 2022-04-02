@@ -64,15 +64,14 @@ export const LazyImage = ({ nft, src, small, shuffle, alt }) => {
 
   const shuffleHover = (shuff) =>{
     if(shuffle){
-      console.log("hover")
-      console.log(shuff)
+      
     }
     
   }
 
   const shuffleUnhover = () =>{
     if(shuffle){
-      console.log("unhover")
+     
     }
    
   }
