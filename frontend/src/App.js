@@ -10,6 +10,7 @@ import {
 import './App.css';
 import WalletConnect from './walletconnect';
 import Profile from './profile'
+import Shuffle from './shuffle'
 import Asset from './asset'
 import NftFinder from './nftfinder';
 import ShuffleFinder from './shufflefinder';
@@ -27,7 +28,7 @@ import MyAlgoConnect from '@randlabs/myalgo-connect';
 
 
 function App() {
- 
+  let backend = "http://localhost:80";
   const [accountChange, setAccountChange] = useState("false");
   const myAlgoConnect = new MyAlgoConnect({ disableLedgerNano: false })
   const account = localStorage.getItem("accountid")
@@ -57,7 +58,7 @@ function App() {
               <MenuIcon />
             </IconButton>
             <Typography variant="h3" component="div" sx={{ flexGrow: 1 }}>
-              Shop Nftz
+              Algo Shuffle
             </Typography>
             {account ? <Button variant="contained" onClick={gotoProfile}>Profile</Button> : <WalletConnect setAccountChange={setAccountChange} myAlgoConnect ={myAlgoConnect}></WalletConnect>}
             
@@ -66,9 +67,10 @@ function App() {
       </Box>
       
       <Routes>
-        <Route path="/"  element={<ShuffleFinder myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} accountChange={accountChange}></ShuffleFinder>} />  
-        <Route path="profile/:profileid" element={<Profile myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} />}/>
+        <Route path="/"  element={<ShuffleFinder myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} accountChange={accountChange} backend={backend}></ShuffleFinder>} />  
+        <Route path="profile/:profileid" element={<Profile myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} backend={backend} />}/>
         <Route path="asset/:assetid" element={<Asset />}/>
+        <Route path="shuffle/:shuffleid" element={<Shuffle backend={backend} />}/>
         </Routes>
     
     </div>

@@ -6,8 +6,13 @@ const bodyParser = require('body-parser');
 const saveWalletRoutes = require('./routes/savewallet');
 const findWalletRoutes = require('./routes/findwallet');
 const saveInstantShuffleRoutes = require('./routes/saveinstantshuffle');
+const instantShuffleRoutes = require('./routes/instantshuffle');
 const findInstantShufflesRoutes = require('./routes/findinstantshuffles');
 const instantShuffleTransactionRoutes = require('./routes/instantshuffletransaction');
+const optOutRoutes = require('./routes/optout');
+const optInRoutes = require('./routes/optin');
+const getApiKeyRoutes = require('./routes/getapikey');
+
 let cors = require('cors')
 app.use(cors())
 require('dotenv').config();
@@ -47,9 +52,12 @@ mongoose.connection.on('connected', function() {
 app.use('/savewallet', saveWalletRoutes)
 app.use('/findwallet', findWalletRoutes)
 app.use('/saveinstantshuffle', saveInstantShuffleRoutes)
+app.use('/instantshuffle', instantShuffleRoutes)
 app.use('/findinstantshuffles', findInstantShufflesRoutes)
 app.use('/instantshuffletransaction', instantShuffleTransactionRoutes)
-
+app.use('/getapikey', getApiKeyRoutes)
+app.use('/optout', optOutRoutes)
+app.use('/optin', optInRoutes)
 // Error request, 
 app.use((req, res, next) => {
     const error = new Error('Route Not Found')

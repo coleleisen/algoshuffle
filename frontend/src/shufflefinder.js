@@ -6,7 +6,7 @@ import BlockchainPull from "./services/blockchainpull";
 import LazyImage from './lazyimage';
 
 
-const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
+const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend}) => {
     const [shuffles, setShuffles] = useState([]);
     const [displayShuffles, setDisplayShuffles] = useState([]); 
     const baseServer = 'https://mainnet-algorand.api.purestake.io/ps2';
@@ -19,10 +19,20 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
     let account = localStorage.getItem("accountid")
     const algodClient = new algosdk.Algodv2(token, testServer, port);
 
+    function base64ToArrayBuffer(base64) {
+        var binary_string = window.atob(base64);
+        var len = binary_string.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes;
+    }
+
 
     
     useEffect(() => {
-        Axios.get("http://localhost:80/findinstantshuffles")
+        Axios.get(`${backend}/findinstantshuffles`)
         .then(result => {
             console.log(result.data)
             setShuffles(result.data)
@@ -54,101 +64,22 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
             address : account,
             storeAssets : storeAssets,
             shuffle : shuffle,
-            params : params
+            params : params,
+            token : localStorage.getItem('apiKey')
         }
-        let res = await Axios.post("http://localhost:80/instantshuffletransaction", tranObj);
+        let res = await Axios.post(`${backend}/instantshuffletransaction`, tranObj);
         let tranResponse = res.data
-        /*
-        let params = await algodClient.getTransactionParams().do();
-        let sender = account;
-        let recipient = account;
-        let revocationTarget = undefined;
-        let closeRemainderTo = undefined;
-        const enc = new TextEncoder();
-        const note = enc.encode("Hello World");
-        let amount = 0;
-        //opt into all assets
-        let txnarr =[]
-        let submitTxnArr=[]
-        const receiver = shuffle.storeAddress;
-        let price = shuffle.price; 
-        let royaltyPrice = shuffle.price * 0.10
-        let lankz = "LANKZYW5QDFPDB4RYI3BH7MMCAYKOZUAFIE4VNDSKKTY26YCCSSRFRTYAA"
-        let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-            from: sender, 
-            to: receiver, 
-            amount: price - royaltyPrice, 
-            node: note, 
-            suggestedParams: params
-        });
-        let royaltytxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-            from: sender, 
-            to: lankz, 
-            amount: price * 0.10, 
-            node: note, 
-            suggestedParams: params
-        });
-        submitTxnArr.push(txn)
-        submitTxnArr.push(royaltytxn)
-        let noteOpt = enc.encode("Opt in");
-        const randomElement = storeAssets[Math.floor(Math.random() * storeAssets.length)];
-        console.log(randomElement)
-        for(let asset of storeAssets) {
-        let opttxn = algosdk.makeAssetTransferTxnWithSuggestedParams(sender, recipient, closeRemainderTo, revocationTarget,
-            amount, noteOpt, asset['asset-id'], params);
-            txnarr.push(opttxn)
-            if(asset['asset-id'] === randomElement['asset-id']){
-                submitTxnArr.push(opttxn)
-            }
-        }
-
-        //this code needs to go to backend
-        sender = shuffle.storeAddress
-        recipient = account
-        amount = 1;
-        let noteFlag = enc.encode("Asset Transfer");
-    
-        let xtxn = algosdk.makeAssetTransferTxnWithSuggestedParams(sender, recipient, closeRemainderTo, revocationTarget,
-            amount,  noteFlag, randomElement['asset-id'] ,params);
-
-        submitTxnArr.push(xtxn)
-
-        let obj ={
-            address : shuffle.sellerAddress
-          }
-        let wallet = await Axios.post("http://localhost:80/findwallet", obj)
         
-       
-        //find index of randomly selected asset
-        let selectedIndex = txnarr.findIndex(tranny => tranny.assetIndex === randomElement['asset-id']) + 2
-        let txgroup = algosdk.assignGroupID(submitTxnArr);
-        */
-       
-        /*
-        for(let transaction of submitTxnArr){
-            let buff = new Buffer.from(transaction.note, 'base64');
-            let transferNote = buff.toString('ascii');
-            if(transferNote !== "Asset Transfer" && transferNote !== 'Opt in'){
-                txnArrInBytes.push(transaction.toByte());
-            }
-        }
-        for(let transaction of txnarr){ 
-            transaction.group = group
-            if(transaction.assetindex === randomElement['asset-id']){
-                txnArrInBytes.push(submitTxnArr[2].toByte())
-            } 
-             txnArrInBytes.push(transaction.toByte());
-        }
-        */
        console.log(tranResponse.signArray)
+       
        let arr = []
        for(let tran of tranResponse.signArray){
            console.log(tran)
-            let tranny = new algosdk.Transaction(tran)
-            console.log("oye")
-            arr.push(tranny.toBytes())
+           let uintArray = base64ToArrayBuffer(tran)
+           console.log(uintArray)
+           arr.push(uintArray)
        }
-       console.log("here")
+       console.log(arr)
        const signedTxn = await myAlgoConnect.signTransaction(arr);
     
         let signedTxns = []
@@ -156,8 +87,8 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange}) => {
         signedTxns.push(signedTxn[0].blob);
         signedTxns.push(signedTxn[1].blob);
         signedTxns.push(signedTxn[selectedIndex+2].blob);
-        
-        signedTxns.push(tranResponse.rawSignedTxn);
+        let rawTxn = base64ToArrayBuffer(tranResponse.rawSignedTxn)
+        signedTxns.push(rawTxn);
         let tx = (await algodClient.sendRawTransaction(signedTxns).do());
         let confirmedTxn = await algosdk.waitForConfirmation(algodClient, tx.txId, 4);
         //make sure waitrounds is good

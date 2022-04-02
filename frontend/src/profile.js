@@ -54,17 +54,21 @@ padding: 1rem;
 justify-items: center;
 `;
 
-function Profile({myAlgoConnect, setAccountChange}) {
+function Profile({myAlgoConnect, setAccountChange, backend}) {
 const [open, setOpen] = React.useState(false);
 const [open2, setOpen2] = React.useState(false);
+const [open3, setOpen3] = React.useState(false);
 const [editProfile, setEditProfile] = React.useState(false);
 const [needStore, setNeedStore] = React.useState(false);
 const [changeShuffleAvatar, setChangeShuffleAvatar] = React.useState(false);
+const [optOutButton, setOptOutButton] = React.useState(false);
+const [shuffleInProgress, setShuffleInProgress] = React.useState(true);
 const [ownedNfts, setOwnedNfts] = React.useState([]);
 const [loopDone, setLoopDone] = React.useState([]);
 const [createdNfts, setCreatedNfts] = React.useState([]);
 const [selectedForShuffle, setSelectedForShuffle] = React.useState([]);
 const [shuffleImage, setShuffleImage] = React.useState("");
+const [phrase, setPhrase] = React.useState("");
 const [shufflePrice, setShufflePrice] = React.useState(0);
 const [profileName, setProfileName] = React.useState("");
 const [profile, setProfile] = React.useState();
@@ -73,10 +77,13 @@ const [profileIndex, setProfileIndex] = React.useState();
 const [website, setWebsite] = React.useState("");
 const [bio, setBio] = React.useState("");
 const [profileHovered, setProfileHovered] = React.useState(false);
+const [apiKey, setApiKey] = React.useState(localStorage.getItem('apiKey'))
 const handleOpen = () => setOpen(true);
 const handleOpen2 = () => setOpen2(true);
+const handleOpen3 = () => setOpen3(true);
 const handleClose = () => setOpen(false);
 const handleClose2 = () => setOpen2(false);
+const handleClose3 = () => {setPhrase("");setOpen3(false);};
 
 let params = useParams();
 const block = new BlockchainPull()
@@ -96,19 +103,37 @@ let account = localStorage.getItem("accountid")
 
 
 // Function used to wait for a tx confirmation
-const waitForConfirmation = async function (algodclient, txId) {
-  let response = await algodclient.status().do();
-  let lastround = response["last-round"];
-  while (true) {
-      const pendingInfo = await algodclient.pendingTransactionInformation(txId).do();
-      if (pendingInfo["confirmed-round"] !== null && pendingInfo["confirmed-round"] > 0) {
-          //Got the completed Transaction
-          console.log("Transaction " + txId + " confirmed in round " + pendingInfo["confirmed-round"]);
-          break;
-      }
-      lastround++;
-      await algodclient.statusAfterBlock(lastround).do();
+const waitForConfirmation = async function (algodClient, txId, timeout) {
+  if (algodClient == null || txId == null || timeout < 0) {
+      throw new Error("Bad arguments");
   }
+
+  const status = (await algodClient.status().do());
+  if (status === undefined) {
+      throw new Error("Unable to get node status");
+  }
+
+  const startround = status["last-round"] + 1;
+  let currentround = startround;
+
+  while (currentround < (startround + timeout)) {
+      const pendingInfo = await algodClient.pendingTransactionInformation(txId).do();
+      if (pendingInfo !== undefined) {
+          if (pendingInfo["confirmed-round"] !== null && pendingInfo["confirmed-round"] > 0) {
+              //Got the completed Transaction
+              return pendingInfo;
+          } else {
+              if (pendingInfo["pool-error"] != null && pendingInfo["pool-error"].length > 0) {
+                  // If there was a pool error, then the transaction has been rejected!
+                  throw new Error("Transaction " + txId + " rejected - pool error: " + pendingInfo["pool-error"]);
+              }
+          }
+      }
+      await algodClient.statusAfterBlock(currentround).do();
+      currentround++;
+  }
+
+  throw new Error("Transaction " + txId + " not confirmed after " + timeout + " rounds!");
 };
 
 const shuffleImageChange = () =>{
@@ -170,12 +195,55 @@ const selectShuffle = ()=>{
   handleOpen2()
 }
 
-const generateStore = ()=>{
+const endShuffle = () =>{
   let body = {
-    address : account
+    address : account,
+    token : localStorage.getItem('apiKey')
   }
-  Axios.post("http://localhost:80/savewallet", body) 
+  Axios.post(`${backend}/instantshuffle/end`, body) 
+  .then(res => {
+      console.log(res)
+      if(res.data.message === "Deleted shuffle"){
+        setShuffleInProgress(false)
+      }
+  })
+  .catch(err => {
+  console.log("====================================")
+  console.log(`Something bad happened while fetching the data\n${err}`)
+  console.log("====================================")
+  })
+}
+
+const generateStore = async ()=>{
+  let sparams = await algodClient.getTransactionParams().do();
+  const receiver = account;
+  const enc = new TextEncoder();
+  const note = enc.encode("This transaction will not be submited, it is for authentication");
+  let amount = 1; 
+  let sender = account;
+
+  let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+      from: sender, 
+      to: receiver, 
+      amount: amount, 
+      node: note, 
+      suggestedParams: sparams
+  });
+  let trans = algosdk.encodeUnsignedTransaction(txn);
+  const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+  let rawSignedTxnB64 = Buffer.from(signedTxn.blob).toString("base64");
+  signedTxn.blob = rawSignedTxnB64
+  let unsignedb64 = Buffer.from(trans).toString("base64");
+  let body={
+    address : account,
+    txn : rawSignedTxnB64,
+    unsignedTxn : unsignedb64
+  } 
+  Axios.post(`${backend}/savewallet`, body) 
   .then(wallet => {
+    console.log(wallet)
+    localStorage.setItem('apiKey', wallet.data.apiKey)
+    setApiKey(wallet.data.apiKey)
     setNeedStore(false)
   })
   .catch(err => {
@@ -184,6 +252,41 @@ const generateStore = ()=>{
   console.log("====================================")
   })
   
+}
+
+const validateApiKey = async () =>{
+    let sparams = await algodClient.getTransactionParams().do();
+    const receiver = account;
+    const enc = new TextEncoder();
+    const note = enc.encode("This transaction will not be submited, it is for authentication");
+    let amount = 1; 
+    let sender = account;
+
+    let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: amount, 
+        node: note, 
+        suggestedParams: sparams
+    });
+    let trans = algosdk.encodeUnsignedTransaction(txn);
+    const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+    let rawSignedTxnB64 = Buffer.from(signedTxn.blob).toString("base64");
+    signedTxn.blob = rawSignedTxnB64
+    let unsignedb64 = Buffer.from(trans).toString("base64");
+    console.log(unsignedb64)
+    let obj={
+      address : account,
+      txn : rawSignedTxnB64,
+      unsignedTxn : unsignedb64
+    }
+    let res = await Axios.post(`${backend}/getapikey`, obj) 
+    console.log(res.data)
+    if(res.data.apiKey){
+      localStorage.setItem('apiKey', res.data.apiKey)
+      setApiKey(res.data.apiKey)
+    }
+
 }
 
 const selectShuffleNft = (nft)=>{
@@ -215,15 +318,14 @@ const shuffleNfts = async () =>{
   setOpen2(false)
   let obj ={
     address : account,
-    selectedForShuffle : selectedForShuffle
+    selectedForShuffle : selectedForShuffle,
+    token : localStorage.getItem('apiKey')
   }
   let params = await algodClient.getTransactionParams().do();
-  let wallet = await Axios.post("http://localhost:80/findwallet", obj)
+  let wallet = await Axios.post(`${backend}/findwallet`, obj)
   let accountInfo = await algodClient.accountInformation(wallet.data.storeAddress).do();
-  console.log(accountInfo);
   let nonSpendable = accountInfo.assets.length * 100000;
   let requiredAmount = selectedForShuffle.length * 102000 + 100000;
-  console.log(requiredAmount);
   if(accountInfo.amount - nonSpendable < requiredAmount){
     let amountOwed = requiredAmount - (accountInfo.amount - nonSpendable)
 
@@ -244,7 +346,53 @@ const shuffleNfts = async () =>{
      const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
      const response = await algodClient.sendRawTransaction(signedTxn.blob).do();
      console.log(response)
-     await waitForConfirmation(algodClient, response.txId);
+     await waitForConfirmation(algodClient, response.txId, 4);
+
+    sender = wallet.data.storeAddress;
+    let recipient = wallet.data.storeAddress;
+    let revocationTarget = undefined;
+    let closeRemainderTo = undefined;
+    amount = 0;
+    //opt into all assets
+    for(let asset of selectedForShuffle) {
+        let opttxn = algosdk.makeAssetTransferTxnWithSuggestedParams(sender, recipient, closeRemainderTo, revocationTarget,
+        amount, note, asset.index, params);
+        let arr = new Uint8Array(Buffer.from(wallet.data.storePK,'base64')); 
+        let rawSignedTxn = opttxn.signTxn(arr);
+        let opttx = (await algodClient.sendRawTransaction(rawSignedTxn).do());
+        await waitForConfirmation(algodClient, opttx.txId, 4);
+        console.log("Transaction : " + opttx.txId);
+    }
+    //send over all assets
+    
+    sender = wallet.data.sellerAddress
+    recipient = wallet.data.storeAddress
+    amount = 1;
+    let txnArr = []
+    for(let asset of selectedForShuffle) {
+      let xtxn = algosdk.makeAssetTransferTxnWithSuggestedParams(sender, recipient, closeRemainderTo, revocationTarget,
+        amount,  note, asset.index, params);
+        txnArr.push(xtxn.toByte())
+    }
+    const signedTxn2 = await myAlgoConnect.signTransaction(txnArr);
+
+    for(let tran of signedTxn2) {
+    const response = await algodClient.sendRawTransaction(tran.blob).do();
+    await waitForConfirmation(algodClient, response.txId, 4);
+    console.log(response)
+    }
+    let body={
+      address : account,
+      price : 1000000 * shufflePrice,
+      image : shuffleImage,
+      token : localStorage.getItem('apiKey')
+    }
+    if(shufflePrice > 0){
+      let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
+      console.log(shuffle)
+      setShuffleInProgress(true);
+    }
+
 
   }else{
     let sender = wallet.data.storeAddress;
@@ -261,7 +409,7 @@ const shuffleNfts = async () =>{
         let arr = new Uint8Array(Buffer.from(wallet.data.storePK,'base64')); 
         let rawSignedTxn = opttxn.signTxn(arr);
         let opttx = (await algodClient.sendRawTransaction(rawSignedTxn).do());
-        await waitForConfirmation(algodClient, opttx.txId);
+        await waitForConfirmation(algodClient, opttx.txId, 4);
         console.log("Transaction : " + opttx.txId);
     }
     //send over all assets
@@ -279,21 +427,64 @@ const shuffleNfts = async () =>{
 
     for(let tran of signedTxn) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
-    await waitForConfirmation(algodClient, response.txId);
+    await waitForConfirmation(algodClient, response.txId, 4);
     console.log(response)
     }
     let body={
       address : account,
       price : 1000000 * shufflePrice,
-      image : shuffleImage
+      image : shuffleImage,
+      token : localStorage.getItem('apiKey')
     }
     if(shufflePrice > 0){
-      let shuffle = await Axios.post("http://localhost:80/saveinstantshuffle", body)  
+      let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
       console.log(shuffle)
+      setShuffleInProgress(true);
     }
     
   }
 
+}
+
+const getStorePhrase = () =>{
+  let body = {
+    address : account,
+    token : localStorage.getItem('apiKey')
+  }
+  Axios.post(`${backend}/findwallet`, body) 
+  .then(wallet => {
+    console.log(wallet.data)  
+    setPhrase(wallet.data.storePhrase)
+    handleOpen3()
+  })
+  .catch(err => {
+  console.log("====================================")
+  console.log(`Something bad happened while fetching the data\n${err}`)
+  console.log("====================================")
+  })
+
+    
+}
+
+const optOut = async ()=>{
+  let params = await algodClient.getTransactionParams().do();
+  let body = {
+    address : account,
+    params : params,
+    token : localStorage.getItem('apiKey')
+  }
+  Axios.post(`${backend}/optout`, body) 
+        .then(response => {
+            console.log(response)
+            if(response.data.message = "opted out of all assets"){
+              setOptOutButton(false)
+            }
+        })
+        .catch(err => {
+        console.log("====================================")
+        console.log(`Something bad happened while fetching the data\n${err}`)
+        console.log("====================================")
+        })
 }
 
 const saveProfile = () =>{
@@ -340,14 +531,38 @@ async function signTransaction (p) {
 
 useEffect(() => {
 let body = {
-  address : account
+  address : account,
+  token : localStorage.getItem('apiKey')
 }
-Axios.post("http://localhost:80/findwallet", body) 
+let store = ""
+Axios.post(`${backend}/findwallet`, body) 
 .then(wallet => {
+  console.log(wallet)
   if(wallet.data.message === "no wallet found with that address"){
     setNeedStore(true)
   }else if(wallet.data.storeAddress){
+    store = wallet.data.storeAddress
     setNeedStore(false)
+
+    if(params.profileid === account){
+      block.algoGetAccount(store)
+        .then(res => {
+          let storeWallet = res.data.account
+          console.log(storeWallet)
+          let storeHasAmount0 = storeWallet.assets.some(asset => asset.amount === 0)
+          if(storeHasAmount0){
+            setOptOutButton(true)
+          }else{
+            setOptOutButton(false)
+          }
+          
+        })
+        .catch(err => {
+        console.log("====================================")
+        console.log(`Something bad happened while fetching the data\n${err}`)
+        console.log("====================================")
+        })
+    }
   }
 })
 .catch(err => {
@@ -356,8 +571,24 @@ console.log(`Something bad happened while fetching the data\n${err}`)
 console.log("====================================")
 })
 
+Axios.post(`${backend}/instantshuffle/checkexists`, body) 
+.then(res => {
+  if(res.data.inProgress){
+    setShuffleInProgress(true)
+  }else{
+    setShuffleInProgress(false)
+  }
+})
+.catch(err => {
+console.log("====================================")
+console.log(`Something bad happened while fetching the data\n${err}`)
+console.log("====================================")
+})
 
-block.algoGetAssetsByCreator("H4OU5NSZJPBCO5324EI37CJA4HFV2DTYP2DTFE6PLRG5HAUIVHRPLE7UNQ")
+        
+
+
+block.algoGetAssetsByCreator(params.profileid)
 .then(result => {
     setCreatedNfts(result.data.assets)
     let arr = result.data.assets
@@ -511,8 +742,19 @@ const getProfileChain = () =>{
     {needStore ? 
        <Button variant="contained" onClick={generateStore}>Generate Store Wallet</Button>
       :
-       <div></div>
+      <div>{!apiKey ? <Button variant="contained" onClick={validateApiKey}>Login</Button> : <div>
+        {optOutButton ? 
+        <Button variant="contained" onClick={optOut}>Opt Out of amount 0 Asas in store wallet</Button>
+          :
+          <div>
+            <Button variant="contained" onClick={getStorePhrase}>View Store Wallet Phrase</Button>
+          </div>
+      }
+      </div>
+      }
+      </div>
     }
+    
     </Grid>
     }
     </Grid>
@@ -593,7 +835,7 @@ const getProfileChain = () =>{
     <div></div>
     }
     <br></br>
-    {account === params.profileid ? <Button onClick={selectShuffle}>Shuffle</Button> : <div></div>}
+    {account === params.profileid ? <div>{!shuffleInProgress ? <Button onClick={selectShuffle}>Start Shuffle</Button> : <Button onClick={endShuffle}>End Shuffle</Button>}</div> : <div></div>}
     <h3>Gallery</h3>
     <br></br>
     <Box>
@@ -625,6 +867,21 @@ const getProfileChain = () =>{
         :
         <div></div>
         }
+      </SmallGrid>
+      </Box>  
+      </Dialog>
+
+      <Dialog
+        open={open3}
+        onClose={handleClose3}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+        style={{ overflow:'scroll'}}
+        PaperProps={{ sx: { width: "50%", height: "90%" } }}
+      >
+        <Box>
+        <SmallGrid>
+        {phrase}
       </SmallGrid>
       </Box>  
       </Dialog>

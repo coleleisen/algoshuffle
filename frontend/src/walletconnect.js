@@ -11,8 +11,14 @@ const WalletConnect = ({ setAccountChange, myAlgoConnect }) => {
 
     useEffect(()=>{
         if(accounts){
+            let oldAcc = localStorage.getItem('accountid')
             let account = accounts[0].address
+            if(oldAcc!==account){
+                localStorage.setItem("apiKey", undefined)
+            }
             localStorage.setItem("accountid", account)
+        
+            
         }
     }, [accounts])
      

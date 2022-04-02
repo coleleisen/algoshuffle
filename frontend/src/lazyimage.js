@@ -92,9 +92,11 @@ export const LazyImage = ({ nft, src, small, shuffle, alt }) => {
     
   }
   const gotoAsset = () =>{
-    console.log(nft)
     if(nft){
       navigate(`/asset/${nft.index}`)
+    }else if(shuffle){
+      console.log(shuffle)
+      navigate(`/shuffle/${shuffle.sellerAddress}`)
     }
     
 

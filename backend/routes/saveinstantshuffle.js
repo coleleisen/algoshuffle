@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const express = require('express');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 const shuffle = require('../models/instantshuffle.js');
 const wallet = require('../models/wallet.js');
@@ -26,6 +27,12 @@ router.post('/', (req, res, next)=>{
             })
             return;
     }
+    if(!req.body.token){
+        res.status(200).json({
+            message: "must include token", status : "fail"
+            })
+            return;
+    }
     let Shuffle;
     let Wallet;
     Wallet = mongoose.model("Wallet", wallet);
@@ -36,33 +43,43 @@ router.post('/', (req, res, next)=>{
         if(walletObj === null){
             return res.status(500).json({message : "must have saved store wallet to create shuffle"})
         }
-        
-
-
-        Shuffle = mongoose.model("InstantShuffle", shuffle);
-        Shuffle.findOne({ 'storeAddress': walletObj.storeAddress }, function (err, shuffleObj) {
-            if (err){
-                return res.status(500).json({ message: err, status : "fail"})
-                
-            } 
-            else if(shuffleObj==null){
-                newShuffle = new Shuffle();
-                newShuffle.sellerAddress = walletObj.sellerAddress
-                newShuffle.storeAddress = walletObj.storeAddress
-                newShuffle.price = req.body.price
-                newShuffle.image = req.body.image
-            
-                newShuffle.save().then(savedShuffle => {
-                    console.log(savedShuffle)
-                    return res.status(200).json(savedShuffle);
-                });  
-            }
-            else{
+        bcrypt.compare(walletObj.apiKey, req.body.token, async (err, result) =>{
+            if(err){
                 return res.status(200).json({
-                    message: "Shuffle already in progress", status : "fail"
-                    })     
-            }      
+                    message: "Incorrect api key", status : "fail", error : err
+                    })
+            }
+            if(!result){
+                return res.status(200).json({
+                    message: "Incorrect api key", status : "fail"
+                    })
+            } 
+
+            Shuffle = mongoose.model("InstantShuffle", shuffle);
+            Shuffle.findOne({ 'storeAddress': walletObj.storeAddress }, function (err, shuffleObj) {
+                if (err){
+                    return res.status(500).json({ message: err, status : "fail"})
+                    
+                } 
+                else if(shuffleObj==null){
+                    newShuffle = new Shuffle();
+                    newShuffle.sellerAddress = walletObj.sellerAddress
+                    newShuffle.storeAddress = walletObj.storeAddress
+                    newShuffle.price = req.body.price
+                    newShuffle.image = req.body.image
+                
+                    newShuffle.save().then(savedShuffle => {
+                        console.log(savedShuffle)
+                        return res.status(200).json(savedShuffle);
+                    });  
+                }
+                else{
+                    return res.status(200).json({
+                        message: "Shuffle already in progress", status : "fail"
+                        })     
+                }      
             })
+        })
     })
 
 })
