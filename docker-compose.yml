@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - "80:80"
+
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: "./backend"
+    restart: always
+    volumes:
+      - /usr/src/app/node_modules
+
+
+  client:
+    stdin_open: true
+    build:
+      dockerfile: Dockerfile
+      context: ./frontend
+    restart: always
+    volumes:
+      - /usr/src/app/node_modules
+
+
