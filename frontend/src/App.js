@@ -30,7 +30,7 @@ import {Env_UsingDockerBuild} from './environment-variables';
 function App() {
   let backend = "http://localhost:80";
   if (Env_UsingDockerBuild){
-    backend = "/api:80";
+    backend = "/api";
   }
   const [accountChange, setAccountChange] = useState("false");
   const myAlgoConnect = new MyAlgoConnect({ disableLedgerNano: false })
