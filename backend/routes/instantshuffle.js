@@ -28,7 +28,7 @@ router.post('/end', (req, res, next)=>{
             return res.status(500).json({ message: err, status : "fail"})
         } 
         if(walletObj === null){
-            return res.status(500).json({message : "must have saved store wallet to create shuffle"})
+            return res.status(500).json({message : "must have saved store wallet to end shuffle"})
         }
         bcrypt.compare(walletObj.apiKey, req.body.token, function(err, result) {
             if(err){
@@ -93,7 +93,7 @@ router.post('/checkexists', (req, res, next)=>{
             return res.status(500).json({ message: err, status : "fail"})
         } 
         if(walletObj === null){
-            return res.status(500).json({message : "must have saved store wallet to create shuffle"})
+            return res.status(200).json({message : "must have saved store wallet to have shuffle", inProgress : false, status : "success"})
         }
         
 
