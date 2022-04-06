@@ -13,8 +13,8 @@ const WalletConnect = ({ setAccountChange, myAlgoConnect, Text }) => {
         if(accounts){
             let oldAcc = localStorage.getItem('accountid')
             let account = accounts[0].address
-            if(oldAcc!==account){
-                localStorage.setItem("apiKey", undefined)
+            if(oldAcc!==account && localStorage.getItem("apiKey")){
+                localStorage.removeItem("apiKey")
             }
             localStorage.setItem("accountid", account)
         

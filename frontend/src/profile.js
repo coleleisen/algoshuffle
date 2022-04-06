@@ -78,7 +78,7 @@ const [profileIndex, setProfileIndex] = React.useState();
 const [website, setWebsite] = React.useState("");
 const [bio, setBio] = React.useState("");
 const [profileHovered, setProfileHovered] = React.useState(false);
-const [apiKey, setApiKey] = React.useState(localStorage.getItem('apiKey'))
+const [apiKey, setApiKey] = React.useState(localStorage.getItem("apiKey"))
 const handleOpen = () => setOpen(true);
 const handleOpen2 = () => setOpen2(true);
 const handleOpen3 = () => setOpen3(true);
@@ -744,7 +744,7 @@ const getProfileChain = () =>{
     <Grid item xs={4}> <Button variant="contained" onClick={saveProfile}>Save Profile</Button></Grid>
     :
     <Grid item xs={4}>
-    {!apiKey || apiKey == "undefined" ? <Button variant="contained" onClick={validateApiKey}>Login</Button> : <div>
+    {!apiKey || apiKey === "undefined" ? <Button variant="contained" onClick={validateApiKey}>Login</Button> : <div>
      {needStore ? 
       <Button variant="contained" onClick={generateStore}>Generate Store Wallet</Button>
      :
