@@ -119,7 +119,7 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend}
             startIcon={<Avatar src={"algo.png"} />}
             >
             
-            Enter Shuffle
+            Buy One
             <br></br>
             Price:
             {shuffle.price / 1000000}

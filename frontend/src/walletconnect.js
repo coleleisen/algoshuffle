@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';;
 
 
 
-const WalletConnect = ({ setAccountChange, myAlgoConnect }) => {
+const WalletConnect = ({ setAccountChange, myAlgoConnect, Text }) => {
     const [accounts, setAccounts] = useState();
 
 
@@ -42,7 +42,7 @@ const WalletConnect = ({ setAccountChange, myAlgoConnect }) => {
  
     return(
         <div>
-            <Button variant="contained" onClick={connectWallet2}>Connect Algo Wallet</Button>
+            <Button variant="contained" onClick={connectWallet2}>{Text}</Button>
         </div>
 
     )

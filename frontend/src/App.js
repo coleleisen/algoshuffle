@@ -63,7 +63,7 @@ function App() {
             <Typography variant="h3" component="div" sx={{ flexGrow: 1 }}>
               Algo Shuffle
             </Typography>
-            {account ? <Button variant="contained" onClick={gotoProfile}>Profile</Button> : <WalletConnect setAccountChange={setAccountChange} myAlgoConnect ={myAlgoConnect}></WalletConnect>}
+            {account ? <Button variant="contained" onClick={gotoProfile}>Profile</Button> : <WalletConnect setAccountChange={setAccountChange} myAlgoConnect ={myAlgoConnect} Text={"Connect Algo Wallet"}></WalletConnect>}
             
           </Toolbar>
         </AppBar>
