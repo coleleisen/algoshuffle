@@ -55,7 +55,7 @@ router.post('/', (req, res, next)=>{
     let Royalty;
     Wallet = mongoose.model("Wallet", wallet);
     Royalty = mongoose.model("Royalty", royalty);
-    Wallet.findOne({ 'storeAddress': shuffle.storeAddress }, function (err, walletObj) {
+    Wallet.findOne({ 'storeAddress': req.body.shuffle.storeAddress }, function (err, walletObj) {
         if (err){
             return res.status(500).json({ message: err, status : "fail"})
         } 
@@ -73,7 +73,7 @@ router.post('/', (req, res, next)=>{
                     message: "Incorrect api key", status : "fail"
                     })
             }
-            Royalty.findOne({ 'sellerAddress': shuffle.storeAddress }, function (err, royaltyFound) {
+            Royalty.findOne({ 'sellerAddress': req.body.shuffle.storeAddress }, function (err, royaltyFound) {
                 if (err){
                     return res.status(500).json({ message: err, status : "fail"})
                 } 
