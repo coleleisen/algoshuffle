@@ -27,12 +27,6 @@ router.post('/', (req, res, next)=>{
             })
             return;
     }
-    if(!req.body.token){
-        res.status(200).json({
-            message: "must include token", status : "fail"
-            })
-            return;
-    }
     if(!req.body.storeAssets){
         res.status(200).json({
             message: "must include storeAssets", status : "fail"

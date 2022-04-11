@@ -744,9 +744,9 @@ const getProfileChain = () =>{
     <Grid item xs={4}> <Button variant="contained" onClick={saveProfile}>Save Profile</Button></Grid>
     :
     <Grid item xs={4}>
-    {!apiKey || apiKey === "undefined" ? <Button variant="contained" onClick={validateApiKey}>Login</Button> : <div>
-     {needStore ? 
-      <Button variant="contained" onClick={generateStore}>Generate Store Wallet</Button>
+      {needStore ? 
+      <Button variant="contained" onClick={generateStore}>Generate Store Wallet</Button>:<div>
+    {!apiKey || apiKey === "undefined" ? <Button variant="contained" onClick={validateApiKey}>Login</Button>
      :
      <div>
        {optOutButton ? 
