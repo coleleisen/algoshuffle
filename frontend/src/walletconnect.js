@@ -30,8 +30,12 @@ const WalletConnect = ({ setAccountChange, myAlgoConnect, Text }) => {
             shouldSelectOneAccount: false,
             openManager: false
         };
+        try{
+            setAccounts(await myAlgoConnect.connect(settings));
+        }catch(e){
+            console.log(e)
+        }
         
-        setAccounts(await myAlgoConnect.connect(settings));
         localStorage.setItem('isCached', "false")
         setAccountChange("true")
         

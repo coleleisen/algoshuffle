@@ -14,6 +14,7 @@ import Shuffle from './shuffle'
 import Asset from './asset'
 import NftFinder from './nftfinder';
 import ShuffleFinder from './shufflefinder';
+import {Snackbar, Alert } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -25,6 +26,8 @@ import Link from '@mui/material/Link'
 import MyAlgoConnect from '@randlabs/myalgo-connect';
 
 import {Env_UsingDockerBuild} from './environment-variables';
+import ErrorBoundary from './errorboundary';
+
 
 
 function App() {
@@ -33,6 +36,8 @@ function App() {
     backend = "/api";
   }
   const [accountChange, setAccountChange] = useState("false");
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const [errorPresent, setErrorPresent] = React.useState(false);
   const myAlgoConnect = new MyAlgoConnect({ disableLedgerNano: false })
   const account = localStorage.getItem("accountid")
   const navigate = useNavigate();
@@ -45,8 +50,27 @@ function App() {
     navigate('')
   }
 
+  const triggerError = (err) =>{
+    setErrorMessage(err)
+    setErrorPresent(true)
+  }
+
+  const errorTimeout = () =>{
+    setErrorPresent(false)
+  }
+
+  useEffect(() => {
+    window.addEventListener("unhandledrejection", event => {
+      console.log(event)
+    });
+    
+  }, []);
+
+ 
+
   return (
     <div className="App">
+        <ErrorBoundary>
         <Box sx={{ flexGrow: 1 }}>
         <AppBar position="static">
           <Toolbar>
@@ -70,12 +94,22 @@ function App() {
       </Box>
       
       <Routes>
-        <Route path="/"  element={<ShuffleFinder myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} accountChange={accountChange} backend={backend}></ShuffleFinder>} />  
-        <Route path="profile/:profileid" element={<Profile myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} backend={backend} />}/>
+        <Route path="/"  element={<ShuffleFinder myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} accountChange={accountChange} backend={backend} triggerError={triggerError}></ShuffleFinder>} />  
+        <Route path="profile/:profileid" element={<Profile myAlgoConnect={myAlgoConnect} setAccountChange={setAccountChange} backend={backend} triggerError={triggerError} />}/>
         <Route path="asset/:assetid" element={<Asset />}/>
         <Route path="shuffle/:shuffleid" element={<Shuffle backend={backend} />}/>
         </Routes>
     
+        <Snackbar
+          anchorOrigin={{'horizontal' : 'center', 'vertical' : 'top'}}
+          open={errorPresent}
+          onClose={errorTimeout}
+          autoHideDuration={5000}
+          message={errorMessage}
+          >
+        <Alert severity="error">{errorMessage}</Alert>
+      </Snackbar> 
+      </ErrorBoundary>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import ErrorBoundary from './errorboundary';
 
 ReactDOM.render(
   <React.StrictMode>

@@ -27,6 +27,7 @@ import Input from '@mui/material/Input';
 import { Tooltip, Grid, CircularProgress } from '@mui/material';
 import BlockchainPull from './services/blockchainpull';
 import LazyImage from './lazyimage';
+import { ConstructionOutlined, VerticalAlignBottom } from '@mui/icons-material';
 
 
 
@@ -54,7 +55,7 @@ padding: 1rem;
 justify-items: center;
 `;
 
-function Profile({myAlgoConnect, setAccountChange, backend}) {
+function Profile({myAlgoConnect, setAccountChange, backend, triggerError}) {
 const [open, setOpen] = React.useState(false);
 const [open2, setOpen2] = React.useState(false);
 const [open3, setOpen3] = React.useState(false);
@@ -175,6 +176,8 @@ const handleEdit = () => {
   }
 }
 
+
+
 const profileHover = () =>{
   setProfileHovered(true)
 }
@@ -202,13 +205,15 @@ const endShuffle = () =>{
     token : localStorage.getItem('apiKey')
   }
   Axios.post(`${backend}/instantshuffle/end`, body) 
-  .then(res => {
-      
+  .then(res => { 
       if(res.data.message === "Deleted shuffle"){
         setShuffleInProgress(false)
+      }else if(res.data.status === "fail"){
+        triggerError(res.data.message)
       }
   })
   .catch(err => {
+  triggerError(err.toString())
   console.log("====================================")
   console.log(`Something bad happened while fetching the data\n${err}`)
   console.log("====================================")
@@ -231,7 +236,15 @@ const generateStore = async ()=>{
       suggestedParams: sparams
   });
   let trans = algosdk.encodeUnsignedTransaction(txn);
-  const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+  let signedTxn
+  try{
+     signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+  }catch(e){
+    console.log(e)
+    triggerError(e.toString())
+    return;
+  }
+  
   let rawSignedTxnB64 = Buffer.from(signedTxn.blob).toString("base64");
   signedTxn.blob = rawSignedTxnB64
   let unsignedb64 = Buffer.from(trans).toString("base64");
@@ -242,12 +255,15 @@ const generateStore = async ()=>{
   } 
   Axios.post(`${backend}/savewallet`, body) 
   .then(wallet => {
-   
+    if(wallet.data.status === "fail"){
+      triggerError(wallet.data.message)
+    }
     localStorage.setItem('apiKey', wallet.data.apiKey)
     setApiKey(wallet.data.apiKey)
     setNeedStore(false)
   })
   .catch(err => {
+  triggerError(err.toString())
   console.log("====================================")
   console.log(`Something bad happened while fetching the data\n${err}`)
   console.log("====================================")
@@ -271,7 +287,15 @@ const validateApiKey = async () =>{
         suggestedParams: sparams
     });
     let trans = algosdk.encodeUnsignedTransaction(txn);
-    const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+    let signedTxn
+    try{
+      signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+    }catch(e){
+      console.log(e)
+      triggerError(e.toString())
+      return;
+    }
+    
     let rawSignedTxnB64 = Buffer.from(signedTxn.blob).toString("base64");
     signedTxn.blob = rawSignedTxnB64
     let unsignedb64 = Buffer.from(trans).toString("base64");
@@ -282,7 +306,9 @@ const validateApiKey = async () =>{
       unsignedTxn : unsignedb64
     }
     let res = await Axios.post(`${backend}/getapikey`, obj) 
-    
+    if(res.data.status === "fail"){
+      triggerError(res.data.message)
+    }
     if(res.data.apiKey){
       localStorage.setItem('apiKey', res.data.apiKey)
       setApiKey(res.data.apiKey)
@@ -325,6 +351,9 @@ const shuffleNfts = async () =>{
   }
   let params = await algodClient.getTransactionParams().do();
   let wallet = await Axios.post(`${backend}/findwallet`, obj)
+  if(wallet.data.status === "fail"){
+    triggerError(wallet.data.message)
+  }
   let accountInfo = await algodClient.accountInformation(wallet.data.storeAddress).do();
   let nonSpendable = accountInfo.assets.length * 100000;
   let requiredAmount = selectedForShuffle.length * 102000 + 100000;
@@ -344,8 +373,15 @@ const shuffleNfts = async () =>{
          node: note, 
          suggestedParams: params
      });
-   
-     const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+     let signedTxn
+     try{
+       signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+     }catch(e){
+       console.log(e)
+       triggerError(e.toString())
+       return;
+     }
+     
      const response = await algodClient.sendRawTransaction(signedTxn.blob).do();
      
      await waitForConfirmation(algodClient, response.txId, 4);
@@ -377,7 +413,15 @@ const shuffleNfts = async () =>{
         txnArr.push(xtxn.toByte())
     }
     setShuffleLoading(false)
-    const signedTxn2 = await myAlgoConnect.signTransaction(txnArr);
+    let signedTxn2
+    try{
+       signedTxn2 = await myAlgoConnect.signTransaction(txnArr);
+    }catch(e){
+      console.log(e)
+      triggerError(e.toString())
+      return;
+    }
+    
     setShuffleLoading(true)
     for(let tran of signedTxn2) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
@@ -392,6 +436,9 @@ const shuffleNfts = async () =>{
     }
     if(shufflePrice > 0){
       let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
+      if(shuffle.data.status === "fail"){
+        triggerError(shuffle.data.message)
+      }
       
       setShuffleInProgress(true);
       setShuffleLoading(false)
@@ -428,7 +475,15 @@ const shuffleNfts = async () =>{
         txnArr.push(xtxn.toByte())
     }
     setShuffleLoading(false)
-    const signedTxn = await myAlgoConnect.signTransaction(txnArr);
+    let signedTxn
+    try{
+       signedTxn = await myAlgoConnect.signTransaction(txnArr);
+    }catch(e){
+      console.log(e)
+      triggerError(e.toString())
+      return;
+    }
+    
     setShuffleLoading(true)
     for(let tran of signedTxn) {
     const response = await algodClient.sendRawTransaction(tran.blob).do();
@@ -442,7 +497,10 @@ const shuffleNfts = async () =>{
       token : localStorage.getItem('apiKey')
     }
     if(shufflePrice > 0){
-      let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)  
+      let shuffle = await Axios.post(`${backend}/saveinstantshuffle`, body)
+      if(shuffle.data.status === "fail"){
+        triggerError(shuffle.data.message)
+      }  
       console.log(shuffle)
       setShuffleInProgress(true);
       setShuffleLoading(false)
@@ -459,11 +517,14 @@ const getStorePhrase = () =>{
   }
   Axios.post(`${backend}/findwallet`, body) 
   .then(wallet => {
-   
+    if(wallet.data.status === "fail"){
+      triggerError(wallet.data.message)
+    }
     setPhrase(wallet.data.storePhrase)
     handleOpen3()
   })
   .catch(err => {
+  triggerError(err.toString())
   console.log("====================================")
   console.log(`Something bad happened while fetching the data\n${err}`)
   console.log("====================================")
@@ -481,12 +542,15 @@ const optOut = async ()=>{
   }
   Axios.post(`${backend}/optout`, body) 
         .then(response => {
-            console.log(response)
+          if(response.data.status === "fail"){
+            triggerError(response.data.message)
+          }
             if(response.data.message = "opted out of all assets"){
               setOptOutButton(false)
             }
         })
         .catch(err => {
+        triggerError(err.toString())
         console.log("====================================")
         console.log(`Something bad happened while fetching the data\n${err}`)
         console.log("====================================")
@@ -524,12 +588,13 @@ async function signTransaction (p) {
         
         let txn = algosdk.makeAssetTransferTxnWithSuggestedParams(p.sender, p.recipient, p.closeRemainderTo, p.revocationTarget,
           p.amount, p.note, p.assetID, param);
-        
-        const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());
+      
+        const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());  
         const response = await algodClient.sendRawTransaction(signedTxn.blob).do();
         
         setTimeout(getProfileChain, 12000);
     } catch(err) {
+      triggerError(err.toString())
       console.error(err); 
     }
   };
@@ -540,9 +605,9 @@ let body = {
   token : localStorage.getItem('apiKey')
 }
 let store = ""
-Axios.post(`${backend}/findwallet`, body) 
+Axios.post(`${backend}/findwallet/nokey`, body) 
 .then(wallet => {
- 
+  console.log(wallet)
   if(wallet.data.message === "no wallet found with that address"){
     setNeedStore(true)
   }else if(wallet.data.storeAddress){
@@ -563,6 +628,7 @@ Axios.post(`${backend}/findwallet`, body)
           
         })
         .catch(err => {
+        triggerError(err.toString())
         console.log("====================================")
         console.log(`Something bad happened while fetching the data\n${err}`)
         console.log("====================================")
@@ -571,6 +637,7 @@ Axios.post(`${backend}/findwallet`, body)
   }
 })
 .catch(err => {
+triggerError(err.toString())
 console.log("====================================")
 console.log(`Something bad happened while fetching the data\n${err}`)
 console.log("====================================")
@@ -585,6 +652,7 @@ Axios.post(`${backend}/instantshuffle/checkexists`, body)
   }
 })
 .catch(err => {
+triggerError(err.toString())
 console.log("====================================")
 console.log(`Something bad happened while fetching the data\n${err}`)
 console.log("====================================")
@@ -618,6 +686,7 @@ block.algoGetAssetsByCreator(params.profileid)
     }
 })
 .catch(err => {
+triggerError(err.toString())
 console.log("====================================")
 console.log(`Something bad happened while fetching the data\n${err}`)
 console.log("====================================")
@@ -670,6 +739,7 @@ block.algoGetAccount(params.profileid)
  
 })
 .catch(err => {
+triggerError(err.toString())
 console.log("====================================")
 console.log(`Something bad happened while fetching the data\n${err}`)
 console.log("====================================")
@@ -728,7 +798,7 @@ const getProfileChain = () =>{
   
   return (
     <div>
-      <br></br>
+      <br></br>   
     <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
     <Grid item xs={4}>
     <WalletConnect setAccountChange={setAccountChange} myAlgoConnect ={myAlgoConnect} Text={"Switch Account"}></WalletConnect>

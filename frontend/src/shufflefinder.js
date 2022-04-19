@@ -6,7 +6,7 @@ import BlockchainPull from "./services/blockchainpull";
 import LazyImage from './lazyimage';
 
 
-const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend}) => {
+const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend, triggerError}) => {
     const [shuffles, setShuffles] = useState([]);
     const [displayShuffles, setDisplayShuffles] = useState([]); 
     const baseServer = 'https://mainnet-algorand.api.purestake.io/ps2';
@@ -68,6 +68,9 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend}
             token : localStorage.getItem('apiKey')
         }
         let res = await Axios.post(`${backend}/instantshuffletransaction`, tranObj);
+        if(res.data.status==="fail"){
+            triggerError(res.data.message)
+        }
         let tranResponse = res.data
         
        console.log(tranResponse.signArray)
@@ -80,8 +83,14 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend}
            arr.push(uintArray)
        }
        console.log(arr)
-       const signedTxn = await myAlgoConnect.signTransaction(arr);
-    
+       let signedTxn
+       try{
+           signedTxn = await myAlgoConnect.signTransaction(arr);
+        }catch(e){
+          console.log(e)
+          triggerError(e.toString())
+          return;
+        }
         let signedTxns = []
         let selectedIndex = tranResponse.selectedIndex
         signedTxns.push(signedTxn[0].blob);

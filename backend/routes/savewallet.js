@@ -4,6 +4,8 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const wallet = require('../models/wallet.js');
 const algosdk = require('algosdk');
+const nobleEd25519 = require('@noble/ed25519');
+const crypto = require('crypto');
 
 router.post('/', async (req, res, next)=>{
      
