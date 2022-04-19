@@ -24,7 +24,6 @@
   },
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
-    "localStart": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -34,9 +33,6 @@
       "react-app",
       "react-app/jest"
     ]
-  },
-  "resolutions": {
-    "react-error-overlay": "6.0.9"
   },
   "browserslist": {
     "production": [
