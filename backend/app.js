@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 })
 console.log(process.env.DB_USER)
 
-const connectionString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@algonfts.iteej.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const connectionString = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@algoshuffle.p2rygjh.mongodb.net/?retryWrites=true&w=majority`;
 mongoose.connect(connectionString, {
   useNewUrlParser : true,
   useUnifiedTopology : true
