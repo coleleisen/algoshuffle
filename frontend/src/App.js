@@ -1,8 +1,7 @@
 import React, { useState, useEffect} from 'react'
 
 import {
-  BrowserRouter,
-  Router,
+
   Routes,
   Route,
   useNavigate
@@ -12,7 +11,6 @@ import WalletConnect from './walletconnect';
 import Profile from './profile'
 import Shuffle from './shuffle'
 import Asset from './asset'
-import NftFinder from './nftfinder';
 import ShuffleFinder from './shufflefinder';
 import {Snackbar, Alert } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
@@ -22,7 +20,6 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box'
-import Link from '@mui/material/Link'
 import MyAlgoConnect from '@randlabs/myalgo-connect';
 
 import {Env_UsingDockerBuild} from './environment-variables';

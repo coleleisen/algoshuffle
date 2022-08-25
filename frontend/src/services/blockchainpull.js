@@ -12,7 +12,7 @@ const config = {
   };
 
 class BlockchainPull {
-    constructor() { }
+    
 
   //ALGO
   

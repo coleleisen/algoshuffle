@@ -1,24 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import React, {  useEffect } from 'react'
 import {
-  BrowserRouter,
-  Routes,
-  Route,
+  
   useParams
 } from "react-router-dom";
 import './App.css';
 import WalletConnect from './walletconnect';
 import Axios from "axios"
-import NftFinder from './nftfinder';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import styled from 'styled-components';
-import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
 import algosdk from 'algosdk';
-import Modal from '@mui/material/Modal';
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import Avatar from '@mui/material/Avatar';
@@ -27,14 +18,10 @@ import Input from '@mui/material/Input';
 import { Tooltip, Grid, CircularProgress } from '@mui/material';
 import BlockchainPull from './services/blockchainpull';
 import LazyImage from './lazyimage';
-import { ConstructionOutlined, VerticalAlignBottom } from '@mui/icons-material';
 
 
 
 
-const style = {
-   
-  };
 
   
 
@@ -89,7 +76,7 @@ const handleClose3 = () => {setPhrase("");setOpen3(false);};
 
 let params = useParams();
 const block = new BlockchainPull()
-const baseServer = 'https://mainnet-algorand.api.purestake.io/ps2';
+//const baseServer = 'https://mainnet-algorand.api.purestake.io/ps2';
 const testServer = "https://testnet-algorand.api.purestake.io/ps2";
 let gateway = "https://gateway.pinata.cloud/ipfs/"
 const placeHolder ='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkqAcAAIUAgUW0RjgAAAAASUVORK5CYII='
@@ -545,7 +532,7 @@ const optOut = async ()=>{
           if(response.data.status === "fail"){
             triggerError(response.data.message)
           }
-            if(response.data.message = "opted out of all assets"){
+            if(response.data.message === "opted out of all assets"){
               setOptOutButton(false)
             }
         })
@@ -590,7 +577,7 @@ async function signTransaction (p) {
           p.amount, p.note, p.assetID, param);
       
         const signedTxn = await myAlgoConnect.signTransaction(txn.toByte());  
-        const response = await algodClient.sendRawTransaction(signedTxn.blob).do();
+        await algodClient.sendRawTransaction(signedTxn.blob).do();
         
         setTimeout(getProfileChain, 12000);
     } catch(err) {
@@ -668,7 +655,7 @@ block.algoGetAssetsByCreator(params.profileid)
     
     let found = false
     for(let i = 0; i < arr.length; i++){
-        if(arr[i].params['unit-name'] == "PRF"){
+        if(arr[i].params['unit-name'] === "PRF"){
             found = true
             setProfileIndex(arr[i].index)
             i = arr.length
@@ -744,11 +731,12 @@ console.log("====================================")
 console.log(`Something bad happened while fetching the data\n${err}`)
 console.log("====================================")
 })
-
+// eslint-disable-next-line
 }, []);
 
 useEffect(() => {
     getProfileChain()
+    // eslint-disable-next-line
     }, [profileIndex]);
 
 const getProfileChain = () =>{
@@ -756,7 +744,7 @@ const getProfileChain = () =>{
       block.algoGetAssetTransactionByAddress(profileIndex, params.profileid)
       .then(result => {
        
-          let latest = result.data.transactions.length -1 
+         // let latest = result.data.transactions.length -1 
           let i = 0
           let tran = undefined
           while(i < result.data.transactions.length){
@@ -774,6 +762,7 @@ const getProfileChain = () =>{
           
       })
       .catch(err => {
+        console.log(err)
       let obj = {
         profileName : "",
         bio : "",
@@ -794,6 +783,10 @@ const getProfileChain = () =>{
       useEffect(() => {
           
         }, [selectedForShuffle]);
+      
+      useEffect(() => {
+          
+        }, [createdNfts]);
 
   
   return (

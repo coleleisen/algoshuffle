@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import {
-  BrowserRouter,
-  Routes,
-  Route,
   useParams
 } from "react-router-dom";
 import './App.css';
@@ -26,11 +23,12 @@ function Shuffle(backend) {
 let gateway = "https://gateway.pinata.cloud/ipfs/"
 let block =  new BlockchainPull()
 let params = useParams();
-const [url, setUrl] = useState("")
+
 const [loopDone, setLoopDone] = React.useState([]);
 const [ownedNfts, setOwnedNfts] = React.useState([]);
-const [name, setName] = useState("")
 const [shuffle, setShuffle] = useState()
+
+
 
 
 useEffect(() => {
@@ -100,7 +98,7 @@ useEffect(() => {
   console.log("====================================")
   })
     
-    
+// eslint-disable-next-line
 }, []);
 
 
@@ -109,6 +107,12 @@ useEffect(() => {
     setOwnedNfts(loopDone)
   }
   }, [loopDone]);
+
+  useEffect(() => {
+    
+    }, [shuffle]);
+
+
 
   return (
     <div>

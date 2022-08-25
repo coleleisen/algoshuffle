@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import {
-  BrowserRouter,
-  Routes,
-  Route,
   useParams
 } from "react-router-dom";
 import './App.css';
-import WalletConnect from './walletconnect';
-import NftFinder from './nftfinder';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import Button from '@mui/material/Button';
-import MenuIcon from '@mui/icons-material/Menu';
-import Box from '@mui/material/Box';
+
 import BlockchainPull  from './services/blockchainpull';
 import LazyImage from './lazyimage';
 
@@ -26,6 +15,7 @@ let params = useParams();
 const [url, setUrl] = useState("")
 const [name, setName] = useState("")
 const [nft, setNft] = useState()
+
 
 useEffect(() => {
     block.algoGetAsset(params.assetid)
@@ -40,7 +30,7 @@ useEffect(() => {
       console.log("====================================")
     })
     
-    
+// eslint-disable-next-line
 }, []);
 
   return (

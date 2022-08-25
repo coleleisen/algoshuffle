@@ -8,8 +8,7 @@ import LazyImage from './lazyimage';
 
 const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend, triggerError}) => {
     const [shuffles, setShuffles] = useState([]);
-    const [displayShuffles, setDisplayShuffles] = useState([]); 
-    const baseServer = 'https://mainnet-algorand.api.purestake.io/ps2';
+    //const baseServer = 'https://mainnet-algorand.api.purestake.io/ps2';
     const testServer = "https://testnet-algorand.api.purestake.io/ps2";
     const port = '';
     const token = {
@@ -40,9 +39,9 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend,
         .catch(err => {
         console.log(`Something bad happened while fetching the data\n${err}`)
         })
-        
+        // eslint-disable-next-line
       }, []);
-
+      /*
     const shuffleHover = (shuffle) =>{
         console.log("hover")
         console.log(shuffle)
@@ -51,7 +50,7 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend,
     const shuffleUnhover = () =>{
         console.log("unhover")
     }
-
+    */
     const enterShuffle = async (shuffle) =>{
 
         let accountIndex = await block.algoGetAccount(shuffle.storeAddress)
@@ -103,6 +102,7 @@ const ShuffleFinder = ({myAlgoConnect, accountChange, setAccountChange, backend,
         //make sure waitrounds is good
         //retry if it is already selected
         console.log("Transaction : " + tx.txId);
+        console.log(confirmedTxn);
 
     }
 

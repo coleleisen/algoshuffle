@@ -1,5 +1,5 @@
-import Axios from "axios"
-import { FormControl, Box, Switch, FormGroup, FormControlLabel, CircularProgress } from "@mui/material";
+
+import {  Box, Switch, FormGroup, FormControlLabel, CircularProgress } from "@mui/material";
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components'
 import LazyImage from "./lazyimage";
@@ -222,9 +222,7 @@ const NftFinder = ({accountChange, setAccountChange}) => {
     }, [accountChange])
      
 
-    const gotoAsset = () =>{
-        
-      }
+    
     
  
     return(
